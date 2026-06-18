@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BigQuery Release Notes</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5;}
+        #notes {margin-top: 20px;}
+        .note {background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .note h3 {margin: 0; font-size: 1.2em;}
+        .note p {margin: 5px 0;}
+        .actions {margin-top: 10px;}
+        button {cursor: pointer; padding: 5px 10px; border: none; border-radius: 3px; background: #1da1f2; color: white;}
+        button:disabled {background: #aaa; cursor: not-allowed;}
+        #spinner {display: none; margin-left: 10px;}
+    </style>
+</head>
+<body>
+    <h1>BigQuery Release Notes</h1>
+    <button id="refreshBtn">Refresh</button>
+    <span id="spinner">🔄 Loading...</span>
+    <div id="notes"></div>
+
+    <script>
+        const refreshBtn = document.getElementById('refreshBtn');
+        const spinner = document.getElementById('spinner');
+        const notesDiv = document.getElementById('notes');
+
+        async function loadNotes() {
+            spinner.style.display = 'inline';
+            try {
+                const res = await fetch('/api/notes');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    renderNotes(data.notes);
+                } else {
+                    notesDiv.innerHTML = `<p style='color:red;'>Error: ${data.error}</p>`;
+                }
+            } catch (e) {
+                notesDiv.innerHTML = `<p style='color:red;'>Fetch error: ${e}</p>`;
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        function renderNotes(notes) {
+            notesDiv.innerHTML = '';
+            notes.forEach((note, idx) => {
+                const el = document.createElement('div');
+                el.className = 'note';
+                el.innerHTML = `
+                    <h3>${note.title}</h3>
+                    <p><small>Updated: ${new Date(note.updated).toLocaleString()}</small></p>
+                    <p>${note.summary}</p>
+                    <div class='actions'>
+                        <button onclick="tweetNote(${idx})">Tweet</button>
+                    </div>
+                `;
+                notesDiv.appendChild(el);
+            });
+            window.currentNotes = notes;
+        }
+
+        async function tweetNote(index) {
+            const note = window.currentNotes[index];
+            const content = `${note.title}\n${note.link}`;
+            try {
+                const res = await fetch('/api/tweet', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content})
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    alert('Tweet posted!');
+                } else {
+                    alert('Tweet failed: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error posting tweet: ' + e);
+            }
+        }
+
+        refreshBtn.addEventListener('click', loadNotes);
+        loadNotes();
+    </script>
+</body>
+</html>
