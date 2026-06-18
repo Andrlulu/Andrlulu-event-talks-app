@@ -20,7 +20,13 @@ def fetch_release_notes():
         link_elem = entry.find('atom:link', ns)
         link = link_elem.attrib.get('href') if link_elem is not None else ''
         updated = entry.find('atom:updated', ns).text if entry.find('atom:updated', ns) is not None else ''
-        summary = entry.find('atom:summary', ns).text if entry.find('atom:summary', ns) is not None else ''
+        # Try <atom:summary> first; if missing, fall back to <atom:content>
+        summary_elem = entry.find('atom:summary', ns)
+        if summary_elem is not None and summary_elem.text:
+            summary = summary_elem.text
+        else:
+            content_elem = entry.find('atom:content', ns)
+            summary = content_elem.text if content_elem is not None else ''
         notes.append({
             'title': title,
             'link': link,
@@ -41,7 +47,7 @@ def api_notes():
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
-# Placeholder tweet function – replace with real Twitter API integration.
+# Placeholder tweet function - replace with real Twitter API integration.
 def post_tweet(content: str) -> bool:
     print('Tweeting:', content)
     return True
@@ -59,4 +65,5 @@ def api_tweet():
         return jsonify({'status': 'error', 'error': 'Failed to post tweet'}), 500
 
 if __name__ == '__main__':
+    # Development server - use a production WSGI server for deployment.
     app.run(host='0.0.0.0', port=5000, debug=True)

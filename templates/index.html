@@ -2,23 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BigQuery Release Notes</title>
     <style>
-        body {font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5;}
-        #notes {margin-top: 20px;}
-        .note {background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .note h3 {margin: 0; font-size: 1.2em;}
-        .note p {margin: 5px 0;}
-        .actions {margin-top: 10px;}
-        button {cursor: pointer; padding: 5px 10px; border: none; border-radius: 3px; background: #1da1f2; color: white;}
-        button:disabled {background: #aaa; cursor: not-allowed;}
-        #spinner {display: none; margin-left: 10px;}
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f4f8;
+            color: #333;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: #1a73e8;
+        }
+        #refreshBtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #1a73e8;
+            color: white;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        #refreshBtn:hover { background: #1558b0; }
+        #refreshBtn:disabled { background: #aaa; cursor: not-allowed; }
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #notes { display: flex; flex-direction: column; gap: 16px; }
+        .note {
+            background: #fff;
+            padding: 20px 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #1a73e8;
+        }
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .note-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #1a73e8;
+            margin: 0;
+        }
+        .note-date {
+            font-size: 0.82em;
+            color: #888;
+            white-space: nowrap;
+        }
+        .note-content {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #444;
+        }
+        .note-content h3 {
+            margin: 12px 0 4px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #555;
+        }
+        .note-content p { margin: 4px 0 8px; }
+        .note-content a { color: #1a73e8; }
+        .note-footer {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .tweet-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 20px;
+            background: #1da1f2;
+            color: white;
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .tweet-btn:hover { background: #0c85d0; }
+        .view-link {
+            font-size: 0.85em;
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .view-link:hover { text-decoration: underline; }
+        #error-msg { color: #c62828; font-weight: 600; }
     </style>
 </head>
 <body>
-    <h1>BigQuery Release Notes</h1>
-    <button id="refreshBtn">Refresh</button>
-    <span id="spinner">🔄 Loading...</span>
+    <header>
+        <h1>BigQuery Release Notes</h1>
+        <button id="refreshBtn">
+            <span class="spinner" id="spinner"></span>
+            Refresh
+        </button>
+    </header>
     <div id="notes"></div>
 
     <script>
@@ -27,19 +137,22 @@
         const notesDiv = document.getElementById('notes');
 
         async function loadNotes() {
-            spinner.style.display = 'inline';
+            refreshBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            notesDiv.innerHTML = '';
             try {
                 const res = await fetch('/api/notes');
                 const data = await res.json();
                 if (data.status === 'ok') {
                     renderNotes(data.notes);
                 } else {
-                    notesDiv.innerHTML = `<p style='color:red;'>Error: ${data.error}</p>`;
+                    notesDiv.innerHTML = `<p id="error-msg">Error: ${data.error}</p>`;
                 }
             } catch (e) {
-                notesDiv.innerHTML = `<p style='color:red;'>Fetch error: ${e}</p>`;
+                notesDiv.innerHTML = `<p id="error-msg">Fetch error: ${e}</p>`;
             } finally {
                 spinner.style.display = 'none';
+                refreshBtn.disabled = false;
             }
         }
 
@@ -48,14 +161,30 @@
             notes.forEach((note, idx) => {
                 const el = document.createElement('div');
                 el.className = 'note';
-                el.innerHTML = `
-                    <h3>${note.title}</h3>
-                    <p><small>Updated: ${new Date(note.updated).toLocaleString()}</small></p>
-                    <p>${note.summary}</p>
-                    <div class='actions'>
-                        <button onclick="tweetNote(${idx})">Tweet</button>
-                    </div>
+
+                const header = document.createElement('div');
+                header.className = 'note-header';
+                header.innerHTML = `
+                    <span class="note-title">${note.title}</span>
+                    <span class="note-date">${new Date(note.updated).toLocaleDateString(undefined, {year:'numeric',month:'long',day:'numeric'})}</span>
                 `;
+                el.appendChild(header);
+
+                const content = document.createElement('div');
+                content.className = 'note-content';
+                content.innerHTML = note.summary;
+                el.appendChild(content);
+
+                const footer = document.createElement('div');
+                footer.className = 'note-footer';
+                footer.innerHTML = `
+                    <button class="tweet-btn" onclick="tweetNote(${idx})">
+                        𝕏 Tweet this
+                    </button>
+                    ${note.link ? `<a class="view-link" href="${note.link}" target="_blank" rel="noopener">View on Google Cloud</a>` : ''}
+                `;
+                el.appendChild(footer);
+
                 notesDiv.appendChild(el);
             });
             window.currentNotes = notes;
@@ -63,16 +192,16 @@
 
         async function tweetNote(index) {
             const note = window.currentNotes[index];
-            const content = `${note.title}\n${note.link}`;
+            const text = note.title + (note.link ? '\n' + note.link : '');
             try {
                 const res = await fetch('/api/tweet', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({content})
+                    body: JSON.stringify({ content: text })
                 });
                 const data = await res.json();
                 if (data.status === 'ok') {
-                    alert('Tweet posted!');
+                    alert('Tweet posted! (simulated)');
                 } else {
                     alert('Tweet failed: ' + data.error);
                 }
