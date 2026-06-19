@@ -47,7 +47,7 @@ def api_notes():
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
-# Placeholder tweet function - replace with real Twitter API integration.
+# Placeholder tweet function – replace with real Twitter API integration.
 def post_tweet(content: str) -> bool:
     print('Tweeting:', content)
     return True
@@ -65,5 +65,5 @@ def api_tweet():
         return jsonify({'status': 'error', 'error': 'Failed to post tweet'}), 500
 
 if __name__ == '__main__':
-    # Development server - use a production WSGI server for deployment.
+    # Development server – use a production WSGI server for deployment.
     app.run(host='0.0.0.0', port=5000, debug=True)

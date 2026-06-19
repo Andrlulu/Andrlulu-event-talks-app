@@ -4,213 +4,1042 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BigQuery Release Notes</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f0f4f8;
-            color: #333;
+        /* ── Theme variables ─────────────────────────────────────── */
+        :root {
+            --bg:                  #f5f7fa;
+            --surface:             #ffffff;
+            --border:              #3b82f6;
+            --border-subtle:      #e2e8f0;
+            --text:                #1e293b;
+            --text-muted:          #64748b;
+            --text-body:           #334155;
+            --heading:             #0f172a;
+            --link:                #2563eb;
+            --btn-refresh:         #2563eb;
+            --btn-refresh-hover:   #1d4ed8;
+            --btn-copy-bg:         #ffffff;
+            --btn-copy-border:     #cbd5e1;
+            --btn-copy-color:      #475569;
+            --btn-copy-hover-bg:   #f8fafc;
+            --shadow:              0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg:           0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.08);
+            --toggle-bg:           #cbd5e1;
+            --toggle-knob:         #ffffff;
+            --accent-green:        #10b981;
+            --accent-green-hover:  #059669;
+            --skeleton-shimmer:    linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
         }
+        
+        html.dark {
+            --bg:                  #0b0f19;
+            --surface:             #151c2c;
+            --border:              #3b82f6;
+            --border-subtle:      #242f49;
+            --text:                #f1f5f9;
+            --text-muted:          #94a3b8;
+            --text-body:           #cbd5e1;
+            --heading:             #f8fafc;
+            --link:                #60a5fa;
+            --btn-refresh:         #3b82f6;
+            --btn-refresh-hover:   #2563eb;
+            --btn-copy-bg:         #1e293b;
+            --btn-copy-border:     #334155;
+            --btn-copy-color:      #cbd5e1;
+            --btn-copy-hover-bg:   #243249;
+            --shadow:              0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+            --shadow-lg:           0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.5);
+            --toggle-bg:           #3b82f6;
+            --toggle-knob:         #ffffff;
+            --accent-green:        #10b981;
+            --accent-green-hover:  #059669;
+            --skeleton-shimmer:    linear-gradient(90deg, #242f49 25%, #1c263c 50%, #242f49 75%);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Smooth Theme Transitions */
+        body, header, .note, button, input, .modal-card, .modal-footer, pre, code, .controls-bar input, .filter-tag {
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        
         header {
             display: flex;
             align-items: center;
             gap: 16px;
             margin-bottom: 24px;
+            flex-wrap: wrap;
         }
+        
         h1 {
             margin: 0;
             font-size: 1.8em;
-            color: #1a73e8;
+            color: var(--border);
+            font-weight: 700;
         }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            font-family: inherit;
+        }
+        
         #refreshBtn {
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            padding: 8px 18px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
-            background: #1a73e8;
+            border-radius: 8px;
+            background: var(--btn-refresh);
             color: white;
             font-size: 0.95em;
             font-weight: 600;
-            transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            transition: background 0.2s, transform 0.1s;
         }
-        #refreshBtn:hover { background: #1558b0; }
-        #refreshBtn:disabled { background: #aaa; cursor: not-allowed; }
+        #refreshBtn:hover { background: var(--btn-refresh-hover); }
+        #refreshBtn:active { transform: scale(0.98); }
+        #refreshBtn:disabled { background: #64748b; cursor: not-allowed; opacity: 0.7; }
+        
+        #exportBtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 20px;
+            border: 1.5px solid var(--accent-green);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--accent-green);
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+        }
+        #exportBtn:hover:not(:disabled) { background: var(--accent-green); color: white; }
+        #exportBtn:active:not(:disabled) { transform: scale(0.98); }
+        #exportBtn:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--text-muted); color: var(--text-muted); }
+        
         .spinner {
             display: none;
             width: 16px;
             height: 16px;
-            border: 3px solid rgba(255,255,255,0.4);
+            border: 2px solid rgba(255,255,255,0.4);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #notes { display: flex; flex-direction: column; gap: 16px; }
-        .note {
-            background: #fff;
-            padding: 20px 24px;
+        
+        /* ── Controls Bar (Search & Filters) ─────────────────────── */
+        .controls-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            font-family: inherit;
+            font-size: 0.95em;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface);
+            color: var(--text);
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid #1a73e8;
+            outline: none;
+            box-shadow: var(--shadow);
+        }
+        .search-wrapper input:focus {
+            border-color: var(--border);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1em;
+            pointer-events: none;
+        }
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-tag {
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.88em;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .filter-tag:hover {
+            background: var(--btn-copy-hover-bg);
+            color: var(--text);
+        }
+        .filter-tag.active {
+            background: var(--border);
+            color: #fff;
+            border-color: var(--border);
+        }
+
+        /* ── Notes Layout ────────────────────────────────────────── */
+        #notes { display: flex; flex-direction: column; gap: 16px; }
+        
+        .note {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--border);
         }
         .note-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
         .note-title {
-            font-size: 1.1em;
+            font-size: 1.15em;
             font-weight: 700;
-            color: #1a73e8;
+            color: var(--border);
             margin: 0;
+            flex: 1;
+            min-width: 250px;
         }
         .note-date {
-            font-size: 0.82em;
-            color: #888;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--text-muted);
             white-space: nowrap;
+            background: var(--bg);
+            padding: 4px 10px;
+            border-radius: 6px;
         }
         .note-content {
-            font-size: 0.95em;
-            line-height: 1.6;
-            color: #444;
+            font-size: 0.96em;
+            line-height: 1.65;
+            color: var(--text-body);
+        }
+        
+        /* Styled code blocks and snippets inside Google release notes content */
+        .note-content pre {
+            background: var(--bg);
+            padding: 14px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 14px 0;
+            border: 1px solid var(--border-subtle);
+            font-family: 'Fira Code', Consolas, monospace;
+            font-size: 0.88em;
+        }
+        .note-content code {
+            font-family: 'Fira Code', Consolas, monospace;
+            background: var(--bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88em;
+            border: 1px solid var(--border-subtle);
+            color: var(--link);
         }
         .note-content h3 {
-            margin: 12px 0 4px;
+            margin: 18px 0 6px;
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #555;
+            color: var(--heading);
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 4px;
         }
-        .note-content p { margin: 4px 0 8px; }
-        .note-content a { color: #1a73e8; }
+        .note-content p { margin: 6px 0 10px; }
+        .note-content a { color: var(--link); text-decoration: none; font-weight: 500; }
+        .note-content a:hover { text-decoration: underline; }
+        .note-content ul { margin: 8px 0 12px; padding-left: 20px; }
+        .note-content li { margin-bottom: 4px; }
+        
         .note-footer {
-            margin-top: 14px;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
+        
         .tweet-btn {
             display: flex;
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border: none;
             border-radius: 20px;
             background: #1da1f2;
             color: white;
             font-size: 0.88em;
             font-weight: 600;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
         }
         .tweet-btn:hover { background: #0c85d0; }
+        .tweet-btn:active { transform: scale(0.96); }
+        
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border: 1px solid var(--btn-copy-border);
+            border-radius: 20px;
+            background: var(--btn-copy-bg);
+            color: var(--btn-copy-color);
+            font-size: 0.88em;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+        }
+        .copy-btn:hover { background: var(--btn-copy-hover-bg); border-color: var(--link); color: var(--link); }
+        .copy-btn:active { transform: scale(0.96); }
+        .copy-btn.copied { background: #d1fae5; border-color: #10b981; color: #047857; }
+        
         .view-link {
-            font-size: 0.85em;
-            color: #1a73e8;
+            font-size: 0.88em;
+            color: var(--link);
             text-decoration: none;
+            font-weight: 500;
+            margin-left: auto;
         }
         .view-link:hover { text-decoration: underline; }
-        #error-msg { color: #c62828; font-weight: 600; }
+        
+        /* ── Dark/Light toggle switch ────────────────────────────── */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: 0.88em;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--toggle-bg);
+            border-radius: 24px;
+            transition: background 0.3s;
+        }
+        .toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: var(--toggle-knob);
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle-switch input:checked ~ .toggle-knob {
+            transform: translateX(20px);
+        }
+        
+        /* ── Toast Notifications ────────────────────────────────── */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1200;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.92em;
+            box-shadow: var(--shadow-lg);
+            color: #fff;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 280px;
+            pointer-events: auto;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        
+        /* ── Skeleton Shimmer Loader ────────────────────────────── */
+        .skeleton-card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .skeleton-line {
+            background: var(--skeleton-shimmer);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite linear;
+            border-radius: 4px;
+        }
+        .skeleton-title { height: 22px; width: 45%; }
+        .skeleton-date { height: 16px; width: 15%; align-self: flex-start; }
+        .skeleton-text { height: 16px; width: 100%; }
+        .skeleton-text-short { height: 16px; width: 80%; }
+        .skeleton-buttons { height: 32px; width: 160px; border-radius: 20px; }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Empty & Error States ────────────────────────────────── */
+        .empty-state, .error-state {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px dashed var(--border-subtle);
+        }
+        .empty-icon, .error-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .empty-title, .error-title {
+            font-size: 1.25em;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: var(--heading);
+        }
+        .empty-desc, .error-desc {
+            font-size: 0.95em;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .error-desc { color: #ef4444; font-weight: 500; }
+        
+        /* ── Tweet Modal ─────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 23, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-card {
+            background: var(--surface);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            transform: translateY(20px);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--heading);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.6em;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+            padding: 0;
+        }
+        .modal-close:hover { color: var(--text); }
+        .modal-body { padding: 24px; }
+        .modal-body textarea {
+            width: 100%;
+            border: 1.5px solid var(--border-subtle);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: inherit;
+            font-size: 0.98em;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+        .modal-body textarea:focus { border-color: var(--border); }
+        .char-counter-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .char-counter-container.limit-reached { color: #ef4444; font-weight: 700; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 18px 24px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--btn-copy-border);
+            color: var(--btn-copy-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.92em;
+        }
+        .btn-secondary:hover { background: var(--btn-copy-hover-bg); }
+        .btn-primary {
+            background: #1da1f2;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.92em;
+        }
+        .btn-primary:hover { background: #0c85d0; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Responsive Styling ──────────────────────────────────── */
+        @media (max-width: 650px) {
+            body { padding: 16px; }
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .header-actions {
+                width: 100%;
+            }
+            #refreshBtn, #exportBtn {
+                flex: 1;
+                justify-content: center;
+            }
+            .theme-toggle {
+                margin-left: 0;
+                justify-content: space-between;
+                width: 100%;
+                border-top: 1px solid var(--border-subtle);
+                padding-top: 12px;
+            }
+            .controls-bar {
+                gap: 10px;
+            }
+            .filter-tags {
+                gap: 6px;
+            }
+            .filter-tag {
+                padding: 4px 10px;
+                font-size: 0.8em;
+            }
+            .note { padding: 18px; }
+            .note-title { font-size: 1.05em; }
+            .view-link { margin-left: 0; width: 100%; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>BigQuery Release Notes</h1>
-        <button id="refreshBtn">
-            <span class="spinner" id="spinner"></span>
-            Refresh
-        </button>
+        <h1>📋 BigQuery Release Notes</h1>
+        <div class="header-actions">
+            <button id="refreshBtn">
+                <span class="spinner" id="spinner"></span>
+                Refresh
+            </button>
+            <button id="exportBtn" disabled>⬇ Export CSV</button>
+        </div>
+        <div class="theme-toggle">
+            <span id="themeLabel">🌙 Dark</span>
+            <label class="toggle-switch" aria-label="Toggle dark mode">
+                <input type="checkbox" id="themeToggle">
+                <span class="toggle-track"></span>
+                <span class="toggle-knob"></span>
+            </label>
+        </div>
     </header>
-    <div id="notes"></div>
+
+    <div class="controls-bar">
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search notes by keyword (e.g. JSON, nested, parquet)..." aria-label="Search release notes">
+        </div>
+        <div class="filter-tags" id="filterTags">
+            <button class="filter-tag active" data-type="all">All Updates</button>
+            <button class="filter-tag" data-type="feature">Features</button>
+            <button class="filter-tag" data-type="change">Changes</button>
+            <button class="filter-tag" data-type="fix">Fixes</button>
+            <button class="filter-tag" data-type="deprecated">Deprecated</button>
+        </div>
+    </div>
+
+    <!-- Main notes feed -->
+    <main id="notes"></main>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <!-- Tweet Review Modal -->
+    <div class="modal-overlay" id="tweetModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Draft Tweet</h3>
+                <button class="modal-close" id="closeModalBtn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="tweetContent" rows="5" maxlength="320" placeholder="What's happening?"></textarea>
+                <div class="char-counter-container" id="charCounterContainer">
+                    <span id="charCounter">0 / 280</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelTweetBtn">Cancel</button>
+                <button class="btn-primary" id="submitTweetBtn">𝕏 Post Tweet</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const refreshBtn = document.getElementById('refreshBtn');
-        const spinner = document.getElementById('spinner');
-        const notesDiv = document.getElementById('notes');
+        const refreshBtn       = document.getElementById('refreshBtn');
+        const spinner          = document.getElementById('spinner');
+        const notesDiv         = document.getElementById('notes');
+        const exportBtn        = document.getElementById('exportBtn');
+        const searchInput      = document.getElementById('searchInput');
+        const filterTagsContainer = document.getElementById('filterTags');
 
+        // Modal elements
+        const tweetModal       = document.getElementById('tweetModal');
+        const tweetContent     = document.getElementById('tweetContent');
+        const charCounter      = document.getElementById('charCounter');
+        const charCounterContainer = document.getElementById('charCounterContainer');
+        const submitTweetBtn   = document.getElementById('submitTweetBtn');
+        const cancelTweetBtn   = document.getElementById('cancelTweetBtn');
+        const closeModalBtn    = document.getElementById('closeModalBtn');
+
+        let activeTweetIndex = null;
+
+        // Custom Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            else if (type === 'error') icon = '❌';
+            
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            // Trigger reflow to animate
+            toast.offsetHeight;
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(20px)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Fetch notes from Flask API
         async function loadNotes() {
             refreshBtn.disabled = true;
+            exportBtn.disabled  = true;
             spinner.style.display = 'inline-block';
+            
+            // Render Skeleton Loader Cards
             notesDiv.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const sk = document.createElement('div');
+                sk.className = 'skeleton-card';
+                sk.innerHTML = `
+                    <div class="note-header">
+                        <div class="skeleton-line skeleton-title"></div>
+                        <div class="skeleton-line skeleton-date"></div>
+                    </div>
+                    <div class="skeleton-line skeleton-text"></div>
+                    <div class="skeleton-line skeleton-text"></div>
+                    <div class="skeleton-line skeleton-text-short"></div>
+                    <div class="note-footer" style="margin-top: 14px; border-top: none; padding-top: 0;">
+                        <div class="skeleton-line skeleton-buttons"></div>
+                    </div>
+                `;
+                notesDiv.appendChild(sk);
+            }
+
             try {
-                const res = await fetch('/api/notes');
+                const res  = await fetch('/api/notes');
                 const data = await res.json();
                 if (data.status === 'ok') {
-                    renderNotes(data.notes);
+                    window.allNotes = data.notes;
+                    filterAndRender();
+                    exportBtn.disabled = false;
                 } else {
-                    notesDiv.innerHTML = `<p id="error-msg">Error: ${data.error}</p>`;
+                    renderErrorState(data.error);
                 }
             } catch (e) {
-                notesDiv.innerHTML = `<p id="error-msg">Fetch error: ${e}</p>`;
+                renderErrorState(e.message || e);
             } finally {
                 spinner.style.display = 'none';
                 refreshBtn.disabled = false;
             }
         }
 
+        function renderErrorState(errorMsg) {
+            notesDiv.innerHTML = `
+                <div class="error-state">
+                    <span class="error-icon">⚠️</span>
+                    <p class="error-title">Failed to load release notes</p>
+                    <p class="error-desc">${errorMsg}</p>
+                </div>
+            `;
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        // Categorize note content using keyword rules
+        function getNoteTypes(note) {
+            const text = (note.title + ' ' + note.summary).toLowerCase();
+            const types = [];
+            
+            if (text.includes('feature') || text.includes('new ') || text.includes('introduced') || text.includes('support')) {
+                types.push('feature');
+            }
+            if (text.includes('change') || text.includes('update') || text.includes('behavior')) {
+                types.push('change');
+            }
+            if (text.includes('fix') || text.includes('resolved') || text.includes('bug')) {
+                types.push('fix');
+            }
+            if (text.includes('deprecate') || text.includes('remove') || text.includes('obsolete') || text.includes('end of support')) {
+                types.push('deprecated');
+            }
+            return types;
+        }
+
+        // Combined Filter and Search
+        function filterAndRender() {
+            if (!window.allNotes) return;
+
+            const query = searchInput.value.toLowerCase().trim();
+            const activeTagBtn = document.querySelector('.filter-tag.active');
+            const activeType = activeTagBtn ? activeTagBtn.dataset.type : 'all';
+
+            const filtered = window.allNotes.filter(note => {
+                // Type Tag Filter
+                if (activeType !== 'all') {
+                    const types = getNoteTypes(note);
+                    if (!types.includes(activeType)) return false;
+                }
+                
+                // Keyword Search Filter
+                if (query) {
+                    const titleMatch = note.title.toLowerCase().includes(query);
+                    const summaryMatch = stripHtml(note.summary).toLowerCase().includes(query);
+                    return titleMatch || summaryMatch;
+                }
+                
+                return true;
+            });
+
+            window.currentFilteredNotes = filtered;
+            renderNotes(filtered);
+        }
+
         function renderNotes(notes) {
             notesDiv.innerHTML = '';
+            
+            if (notes.length === 0) {
+                notesDiv.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">🔍</span>
+                        <p class="empty-title">No release notes match filters</p>
+                        <p class="empty-desc">Try checking your spelling or adjusting your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
             notes.forEach((note, idx) => {
-                const el = document.createElement('div');
+                const el = document.createElement('article');
                 el.className = 'note';
 
+                // Header
                 const header = document.createElement('div');
                 header.className = 'note-header';
+                
+                const dateStr = new Date(note.updated).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
                 header.innerHTML = `
-                    <span class="note-title">${note.title}</span>
-                    <span class="note-date">${new Date(note.updated).toLocaleDateString(undefined, {year:'numeric',month:'long',day:'numeric'})}</span>
+                    <h2 class="note-title">${note.title}</h2>
+                    <span class="note-date">${dateStr}</span>
                 `;
                 el.appendChild(header);
 
+                // Content
                 const content = document.createElement('div');
                 content.className = 'note-content';
                 content.innerHTML = note.summary;
                 el.appendChild(content);
 
+                // Footer Actions
                 const footer = document.createElement('div');
                 footer.className = 'note-footer';
+                
+                // Find index in overall window.allNotes to link copy/tweet indices accurately
+                const overallIndex = window.allNotes.indexOf(note);
+
                 footer.innerHTML = `
-                    <button class="tweet-btn" onclick="tweetNote(${idx})">
-                        𝕏 Tweet this
-                    </button>
-                    ${note.link ? `<a class="view-link" href="${note.link}" target="_blank" rel="noopener">View on Google Cloud</a>` : ''}
+                    <button class="tweet-btn" onclick="openTweetModal(${overallIndex})">𝕏 Tweet</button>
+                    <button class="copy-btn" id="copy-${overallIndex}" onclick="copyNote(${overallIndex})">📋 Copy</button>
+                    ${note.link ? `<a class="view-link" href="${note.link}" target="_blank" rel="noopener">View on Google Cloud ↗</a>` : ''}
                 `;
                 el.appendChild(footer);
 
                 notesDiv.appendChild(el);
             });
-            window.currentNotes = notes;
         }
 
-        async function tweetNote(index) {
-            const note = window.currentNotes[index];
-            const text = note.title + (note.link ? '\n' + note.link : '');
+        // Copy plain text of note to clipboard
+        async function copyNote(index) {
+            const note = window.allNotes[index];
+            const plain = `${note.title}\n${new Date(note.updated).toLocaleDateString()}\n\n${stripHtml(note.summary)}\n\n${note.link}`;
             try {
-                const res = await fetch('/api/tweet', {
+                await navigator.clipboard.writeText(plain);
+                const btn = document.getElementById(`copy-${index}`);
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copied');
+                showToast('Release note copied to clipboard', 'success');
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (e) {
+                showToast('Failed to copy text: ' + e, 'error');
+            }
+        }
+
+        // Export active notes to CSV
+        function exportCSV() {
+            const notesToExport = window.currentFilteredNotes || window.allNotes;
+            if (!notesToExport || notesToExport.length === 0) {
+                showToast('No notes available to export', 'error');
+                return;
+            }
+
+            const escape = val => `"${String(val).replace(/"/g, '""')}"`;
+            const headers = ['Title', 'Date', 'Summary', 'Link'];
+            const rows = notesToExport.map(note => [
+                escape(note.title),
+                escape(new Date(note.updated).toLocaleDateString()),
+                escape(stripHtml(note.summary)),
+                escape(note.link)
+            ].join(','));
+
+            const csv = [headers.join(','), ...rows].join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `bigquery-release-notes-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`Exported ${notesToExport.length} notes to CSV`, 'success');
+        }
+
+        // Tweet Draft Modal Operations
+        function openTweetModal(index) {
+            activeTweetIndex = index;
+            const note = window.allNotes[index];
+            
+            // Limit content preview for draft default text
+            const textPreview = stripHtml(note.summary).slice(0, 160) + (note.summary.length > 160 ? '...' : '');
+            const tweetText = `BigQuery Update: ${note.title}\n\n${textPreview}\n\n${note.link}`.trim();
+            
+            tweetContent.value = tweetText;
+            updateCharCounter(tweetText.length);
+            
+            tweetModal.style.display = 'flex';
+            // Force a reflow
+            tweetModal.offsetHeight;
+            tweetModal.classList.add('active');
+            tweetContent.focus();
+        }
+
+        function closeTweetModal() {
+            tweetModal.classList.remove('active');
+            setTimeout(() => {
+                tweetModal.style.display = 'none';
+                tweetContent.value = '';
+                activeTweetIndex = null;
+            }, 200);
+        }
+
+        function updateCharCounter(length) {
+            charCounter.textContent = `${length} / 280`;
+            if (length > 280) {
+                charCounterContainer.classList.add('limit-reached');
+                submitTweetBtn.disabled = true;
+            } else {
+                charCounterContainer.classList.remove('limit-reached');
+                submitTweetBtn.disabled = false;
+            }
+        }
+
+        async function submitTweet() {
+            const text = tweetContent.value.trim();
+            if (!text) return;
+            
+            submitTweetBtn.disabled = true;
+            try {
+                const res  = await fetch('/api/tweet', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ content: text })
                 });
                 const data = await res.json();
                 if (data.status === 'ok') {
-                    alert('Tweet posted! (simulated)');
+                    showToast('Tweet posted! (simulated)', 'success');
+                    closeTweetModal();
                 } else {
-                    alert('Tweet failed: ' + data.error);
+                    showToast('Tweet failed: ' + data.error, 'error');
+                    submitTweetBtn.disabled = false;
                 }
             } catch (e) {
-                alert('Error posting tweet: ' + e);
+                showToast('Error posting tweet: ' + e, 'error');
+                submitTweetBtn.disabled = false;
             }
         }
 
+        // ── Dark / Light mode toggle ───────────────────────────────────────
+        const themeToggle = document.getElementById('themeToggle');
+        const themeLabel  = document.getElementById('themeLabel');
+
+        function applyTheme(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            themeToggle.checked = dark;
+            themeLabel.textContent = dark ? '☀️ Light' : '🌙 Dark';
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        }
+
+        // Restore saved preference
+        const saved = localStorage.getItem('theme');
+        applyTheme(saved === 'dark');
+
+        // Event Listeners
+        themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
         refreshBtn.addEventListener('click', loadNotes);
+        exportBtn.addEventListener('click', exportCSV);
+        
+        // Live search and filter tags
+        searchInput.addEventListener('input', filterAndRender);
+        
+        filterTagsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-tag')) {
+                document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                filterAndRender();
+            }
+        });
+
+        // Modal Listeners
+        tweetContent.addEventListener('input', (e) => updateCharCounter(e.target.value.length));
+        cancelTweetBtn.addEventListener('click', closeTweetModal);
+        closeModalBtn.addEventListener('click', closeTweetModal);
+        submitTweetBtn.addEventListener('click', submitTweet);
+
+        // Close modal when clicking background
+        tweetModal.addEventListener('click', (e) => {
+            if (e.target === tweetModal) closeTweetModal();
+        });
+
+        // Trigger initial notes load
         loadNotes();
     </script>
 </body>

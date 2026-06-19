@@ -1,17 +1,21 @@
 # 📋 BigQuery Release Notes Viewer
 
-A lightweight **Python Flask** web application that fetches the latest **Google BigQuery release notes** from the official Atom/XML feed and displays them in a clean, readable UI — with a one-click **Tweet** button for any note.
+A lightweight **Python Flask** web application that fetches the latest **Google BigQuery release notes** from the official Atom/XML feed and displays them in a clean, responsive, and beautiful dashboard. It comes packed with user-friendly utilities like copy-to-clipboard, CSV exports, search/tag filtering, and a Twitter draft editor.
 
 ---
 
 ## 🚀 Features
 
-- 🔄 **Live feed** — pulls release notes directly from Google's public Atom feed
-- ⚡ **Refresh on demand** — click Refresh anytime; a spinner shows while loading
-- 🖥️ **Rich content rendering** — notes are rendered as formatted HTML (headings, links, lists)
-- 🐦 **Tweet any note** — one-click tweet button per release note (simulated; ready for real Twitter/X API)
-- 🔗 **View on Google Cloud** — direct link to the official release notes page for each date
-- 🧹 **No database needed** — stateless; all data is fetched live on demand
+- 🔄 **Live feed** — pulls release notes directly from Google's public Atom feed.
+- ⚡ **Refresh on demand** — click Refresh anytime; a shimmering **Skeleton Loader** screen displays while data fetches.
+- 🖥️ **Rich content rendering** — notes are rendered as formatted HTML with customized styles for headings, lists, inline code, and code blocks (`<pre>`).
+- 🌙 **Dark/Light Mode** — a custom toggle switch with seamless HSL color scheme transitions that persists your preference via `localStorage`.
+- 🔍 **Live Search** — dynamic, instant client-side keyword search to quickly locate specific updates (e.g. "JSON", "nested").
+- 🏷️ **Category Tags** — quick-filter updates by type: **Features**, **Changes**, **Fixes**, and **Deprecated**.
+- ⬇️ **Export to CSV** — export the active, filtered list of release notes to a CSV file in one click.
+- 📋 **Copy to Clipboard** — copy clean, plaintext summaries of release notes for quick sharing.
+- 🐦 **𝕏 Tweet review modal** — draft and edit your tweets in a custom modal container featuring character count limit checks (up to 280 chars) before posting to the simulated Twitter endpoint.
+- 🔗 **View on Google Cloud** — direct link to the official release notes page for each date.
 
 ---
 
@@ -22,7 +26,7 @@ A lightweight **Python Flask** web application that fetches the latest **Google 
 | **Server** | Python 3, Flask 3.x |
 | **HTTP client** | `requests` library |
 | **XML parsing** | `xml.etree.ElementTree` (built-in) |
-| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES2017+) |
+| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES2017+), Google Fonts (Inter, Fira Code) |
 | **Data source** | [Google BigQuery Atom feed](https://docs.cloud.google.com/feeds/bigquery-release-notes.xml) |
 
 ---
@@ -104,7 +108,7 @@ Browser                    Flask Server              Google Cloud
    │                           │  parse XML → JSON        │
    │  200 OK (JSON)            │                          │
    │ ◄─────────────────────── │                          │
-   │  render 30 note cards     │                          │
+   │  render note cards        │                          │
    │                           │                          │
    │  POST /api/tweet          │                          │
    │ ─────────────────────── ► │  post_tweet() [simulated]│
@@ -139,13 +143,6 @@ Fetches and returns all BigQuery release notes.
 }
 ```
 
-> `summary` contains **raw HTML** from the Atom feed — rendered via `innerHTML` in the browser.
-
-**Error response**
-```json
-{ "status": "error", "error": "Connection timeout" }
-```
-
 ---
 
 ### `POST /api/tweet`
@@ -153,7 +150,7 @@ Sends a tweet for a selected note (currently simulated).
 
 **Request body**
 ```json
-{ "content": "June 17, 2026\nhttps://docs.cloud.google.com/bigquery/docs/release-notes#June_17_2026" }
+{ "content": "BigQuery Update: June 17, 2026\n\nFeature: You can enable autonomous embedding...\n\nhttps://docs.cloud.google.com/bigquery/docs/release-notes#June_17_2026" }
 ```
 
 **Success response**
@@ -212,19 +209,6 @@ gunicorn -w 4 -b 0.0.0.0:8080 app:app
 ```
 
 You can also containerise with Docker and deploy to **Google Cloud Run**, **Heroku**, or any container platform.
-
----
-
-## 🛠️ Potential Enhancements
-
-| Enhancement | Description |
-|-------------|-------------|
-| **Feed caching** | Cache responses for 5–10 min to reduce calls to Google |
-| **Search / filter** | Add a search bar to filter notes by keyword |
-| **Dark mode** | CSS class toggle for a dark theme |
-| **Pagination** | Paginate notes if the feed grows large |
-| **Notifications** | Webhook or email alert when new notes are published |
-| **Dockerisation** | Add a `Dockerfile` for portable deployment |
 
 ---
 
